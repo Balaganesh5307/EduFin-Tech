@@ -4,6 +4,9 @@ import { AuthProvider } from './contexts/auth.context';
 import { ProtectedRoute } from './components/protected-route';
 import { DashboardLayout } from './layouts/dashboard-layout';
 import { Login } from './pages/login';
+import { ForgotPassword } from './pages/forgot-password';
+import { ResetPassword } from './pages/reset-password';
+import { VerifyEmail } from './pages/verify-email';
 import { DashboardsIndex } from './pages/dashboards/index';
 import { AIChatbot } from './components/chatbot';
 
@@ -12,8 +15,11 @@ export const App: React.FC = () => {
     <AuthProvider>
       <BrowserRouter>
         <Routes>
-          {/* Public login route */}
+          {/* Public authentication routes */}
           <Route path="/login" element={<Login />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="/verify-email" element={<VerifyEmail />} />
 
           {/* Protected dashboard routes */}
           <Route element={<ProtectedRoute />}>

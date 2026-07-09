@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth, UserRole } from '../contexts/auth.context';
 import { Lock, Mail, CheckCircle2, ChevronRight, AlertCircle } from 'lucide-react';
 
@@ -35,6 +35,12 @@ export const Login: React.FC = () => {
         navigate('/');
       }
     } catch (err: any) {
+      if (err.message === 'VERIFICATION_REQUIRED') {
+        // Cache the email so verify-email loads it instantly
+        sessionStorage.setItem('edufin_pending_verify_email', email);
+        navigate(`/verify-email?email=${encodeURIComponent(email)}`);
+        return;
+      }
       setErrorMsg(err.message || 'Login failed. Please try again.');
     } finally {
       setSubmitting(false);
@@ -123,7 +129,12 @@ export const Login: React.FC = () => {
               </div>
 
               <div>
-                <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-2">Password</label>
+                <div className="flex justify-between items-center mb-2">
+                  <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Password</label>
+                  <Link to="/forgot-password" className="text-xs font-semibold text-indigo-400 hover:text-indigo-300 transition-colors">
+                    Forgot Password?
+                  </Link>
+                </div>
                 <div className="relative">
                   <Lock className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-500" />
                   <input

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import { Sidebar } from '../components/sidebar';
 import { useAuth } from '../contexts/auth.context';
+import { ProfileModal } from '../components/profile-modal';
 import { Bell, Search, Menu, X, Sparkles, BookOpen } from 'lucide-react';
 
 export const DashboardLayout: React.FC = () => {
@@ -9,6 +10,7 @@ export const DashboardLayout: React.FC = () => {
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState<boolean>(false);
   const [showNotifications, setShowNotifications] = useState<boolean>(false);
+  const [profileOpen, setProfileOpen] = useState<boolean>(false);
 
   const notifications = [
     { id: '1', title: 'Upcoming Tuition Fee Due', text: '₹35,000 Tuition installment is due on 15th August.', time: '2h ago', unread: true },
@@ -48,7 +50,7 @@ export const DashboardLayout: React.FC = () => {
     <div className="min-h-screen bg-slate-950 text-slate-100 flex">
       {/* Desktop Sidebar (Left Panel) */}
       <div className="hidden lg:block w-72 shrink-0">
-        <Sidebar />
+        <Sidebar onProfileClick={() => setProfileOpen(true)} />
       </div>
 
       {/* Mobile Drawer (Left Panel Overlay) */}
@@ -58,7 +60,7 @@ export const DashboardLayout: React.FC = () => {
           <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm" onClick={() => setMobileOpen(false)}></div>
           {/* Sidebar Drawer */}
           <div className="relative flex w-72 flex-col bg-slate-900 border-r border-slate-800 animate-slide-in">
-            <Sidebar onNavigate={() => setMobileOpen(false)} />
+            <Sidebar onNavigate={() => setMobileOpen(false)} onProfileClick={() => setProfileOpen(true)} />
             <button
               onClick={() => setMobileOpen(false)}
               className="absolute top-5 right-5 text-slate-400 p-1.5 hover:bg-slate-800 rounded-lg"
@@ -148,6 +150,9 @@ export const DashboardLayout: React.FC = () => {
           <Outlet />
         </main>
       </div>
+
+      {/* Global Profile Settings Modal */}
+      <ProfileModal isOpen={profileOpen} onClose={() => setProfileOpen(false)} />
     </div>
   );
 };

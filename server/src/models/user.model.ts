@@ -12,8 +12,23 @@ export interface IUser extends Document {
   refreshTokens: string[];
   avatar?: string;
   phoneNumber?: string;
+  
+  // Verification & Recovery
+  isEmailVerified: boolean;
+  emailVerificationToken?: string;
+  emailVerificationExpiry?: Date;
+  resetPasswordToken?: string;
+  resetPasswordExpiry?: Date;
+  
+  // Security lockouts
+  loginAttempts: number;
+  lockUntil?: Date;
+
   createdAt: Date;
   updatedAt: Date;
+  
+  // Instance methods
+  isLocked(): boolean;
 }
 
 const UserSchema: Schema = new Schema(
@@ -35,8 +50,25 @@ const UserSchema: Schema = new Schema(
     refreshTokens: [{ type: String }],
     avatar: { type: String },
     phoneNumber: { type: String },
+    
+    // Verification & Recovery
+    isEmailVerified: { type: Boolean, default: false },
+    emailVerificationToken: { type: String },
+    emailVerificationExpiry: { type: Date },
+    resetPasswordToken: { type: String },
+    resetPasswordExpiry: { type: Date },
+    
+    // Security lockouts
+    loginAttempts: { type: Number, required: true, default: 0 },
+    lockUntil: { type: Date },
   },
   { timestamps: true }
 );
+
+// Lockout helper checks
+UserSchema.methods.isLocked = function (this: IUser): boolean {
+  if (!this.lockUntil) return false;
+  return this.lockUntil.getTime() > Date.now();
+};
 
 export const User = mongoose.model<IUser>('User', UserSchema);
