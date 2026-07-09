@@ -10,6 +10,9 @@ import authRoutes from './routes/auth.routes';
 import dashboardRoutes from './routes/dashboard.routes';
 import paymentRoutes from './routes/payment.routes';
 import aiRoutes from './routes/ai.routes';
+import studentRoutes from './routes/student.routes';
+import academicRoutes from './routes/academic-mgmt.routes';
+import attendanceRoutes from './routes/attendance.routes';
 
 import { User } from './models/user.model';
 
@@ -33,6 +36,9 @@ app.use('/api/auth', authRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/payment', paymentRoutes);
 app.use('/api/ai', aiRoutes);
+app.use('/api/students', studentRoutes);
+app.use('/api/academic', academicRoutes);
+app.use('/api/attendance', attendanceRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {
