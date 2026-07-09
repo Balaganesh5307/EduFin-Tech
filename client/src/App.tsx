@@ -8,6 +8,9 @@ import { ForgotPassword } from './pages/forgot-password';
 import { ResetPassword } from './pages/reset-password';
 import { VerifyEmail } from './pages/verify-email';
 import { DashboardsIndex } from './pages/dashboards/index';
+import { StudentDirectory } from './pages/admin/student-directory';
+import { StudentProfile } from './pages/student/student-profile';
+import { AttendanceLedger } from './pages/faculty/attendance-ledger';
 import { AIChatbot } from './components/chatbot';
 
 export const App: React.FC = () => {
@@ -26,6 +29,11 @@ export const App: React.FC = () => {
             <Route element={<DashboardLayout />}>
               {/* Common landing page pointing to role-based dashboard */}
               <Route path="/" element={<DashboardsIndex />} />
+              
+              {/* Core Student / Faculty / Admin routes */}
+              <Route path="/admin/students" element={<StudentDirectory />} />
+              <Route path="/student/profile" element={<StudentProfile />} />
+              <Route path="/faculty/attendance" element={<AttendanceLedger />} />
               
               {/* Placeholders for other sub-links to keep Router robust */}
               <Route path="/fees" element={<DashboardsIndex />} />

@@ -14,7 +14,8 @@ import {
   LogOut,
   FolderLock,
   User,
-  GraduationCap
+  GraduationCap,
+  Users
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -38,6 +39,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onNavigate, onProfileClick }) 
       case 'Student':
         return [
           ...common,
+          { to: '/student/profile', label: 'Student Profile', icon: User },
           { to: '/fees', label: 'Fees & Payments', icon: CreditCard },
           { to: '/tracker', label: 'Personal Tracker', icon: PiggyBank },
           { to: '/scholarships', label: 'Scholarships', icon: Award },
@@ -54,13 +56,14 @@ export const Sidebar: React.FC<SidebarProps> = ({ onNavigate, onProfileClick }) 
       case 'Faculty':
         return [
           ...common,
-          { to: '/attendance', label: 'Attendance Management', icon: CalendarCheck },
+          { to: '/faculty/attendance', label: 'Attendance Management', icon: CalendarCheck },
           { to: '/reports', label: 'Academics Reports', icon: BookOpen }
         ];
 
       case 'Admin':
         return [
           ...common,
+          { to: '/admin/students', label: 'Student Directory', icon: Users },
           { to: '/revenue', label: 'Revenue Analytics', icon: TrendingUp },
           { to: '/scholarships-approvals', label: 'Scholarship Center', icon: Award },
           { to: '/loan-pipelines', label: 'Loan Pipelines', icon: GraduationCap }
@@ -69,6 +72,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onNavigate, onProfileClick }) 
       case 'SuperAdmin':
         return [
           ...common,
+          { to: '/admin/students', label: 'Student Directory', icon: Users },
           { to: '/revenue', label: 'Revenue Analytics', icon: TrendingUp },
           { to: '/scholarships-approvals', label: 'Scholarship Center', icon: Award },
           { to: '/loan-pipelines', label: 'Loan Pipelines', icon: GraduationCap },
