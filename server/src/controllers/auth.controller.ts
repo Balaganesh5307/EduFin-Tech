@@ -1,8 +1,11 @@
 import { Request, Response } from 'express';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
+import crypto from 'crypto';
 import { User, UserRole } from '../models/user.model';
 import { AuthenticatedRequest } from '../middleware/auth.middleware';
+import { sendVerificationEmail, sendPasswordResetEmail } from '../services/mail.service';
+import { uploadToCloudinary } from '../services/upload.service';
 
 const ACCESS_SECRET = process.env.JWT_ACCESS_SECRET || 'edufin_jwt_access_secret_key_2026_secure';
 const REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || 'edufin_jwt_refresh_secret_key_2026_secure';
@@ -35,6 +38,10 @@ export const register = async (req: Request, res: Response) => {
     const salt = await bcrypt.genSalt(10);
     const passwordHash = await bcrypt.hash(password, salt);
 
+    // Generate 6-digit OTP verification code
+    const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+    const verificationExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+
     const newUser = new User({
       email,
       passwordHash,
@@ -42,29 +49,21 @@ export const register = async (req: Request, res: Response) => {
       role: role as UserRole,
       status: 'Active',
       refreshTokens: [],
+      isEmailVerified: false,
+      emailVerificationToken: verificationCode,
+      emailVerificationExpiry: verificationExpiry,
+      loginAttempts: 0
     });
 
     await newUser.save();
-
-    const { accessToken, refreshToken } = generateTokens({
-      id: newUser._id.toString(),
-      email: newUser.email,
-      role: newUser.role,
-    });
-
-    newUser.refreshTokens.push(refreshToken);
-    await newUser.save();
+    
+    // Dispatch Verification Email
+    await sendVerificationEmail(newUser.email, newUser.name, verificationCode);
 
     return res.status(201).json({
-      message: 'User registered successfully',
-      user: {
-        id: newUser._id,
-        email: newUser.email,
-        name: newUser.name,
-        role: newUser.role,
-      },
-      accessToken,
-      refreshToken,
+      message: 'Account created successfully. A verification code has been dispatched to your email.',
+      email: newUser.email,
+      isVerified: false
     });
   } catch (error) {
     return res.status(500).json({ message: 'Server registration error', error });
@@ -80,14 +79,53 @@ export const login = async (req: Request, res: Response) => {
       return res.status(401).json({ message: 'Invalid email or password' });
     }
 
+    // 1. Lockout Check
+    if (user.isLocked()) {
+      const secondsLeft = Math.ceil(((user.lockUntil?.getTime() || 0) - Date.now()) / 1000);
+      const minutesLeft = Math.ceil(secondsLeft / 60);
+      return res.status(423).json({
+        message: `Account is temporarily locked. Please try again in ${minutesLeft} minute(s).`
+      });
+    }
+
     if (user.status !== 'Active') {
       return res.status(403).json({ message: 'Account is inactive or pending approval' });
     }
 
     const isMatch = await bcrypt.compare(password, user.passwordHash);
+
     if (!isMatch) {
-      return res.status(401).json({ message: 'Invalid email or password' });
+      // Increment failed login counter
+      user.loginAttempts += 1;
+      
+      if (user.loginAttempts >= 5) {
+        user.lockUntil = new Date(Date.now() + 15 * 60 * 1000); // Lock for 15 mins
+        await user.save();
+        return res.status(423).json({
+          message: 'Too many failed login attempts. Your account is locked for 15 minutes.'
+        });
+      }
+
+      await user.save();
+      const attemptsRemaining = 5 - user.loginAttempts;
+      return res.status(401).json({
+        message: `Invalid email or password. You have ${attemptsRemaining} attempt(s) remaining before lockout.`
+      });
     }
+
+    // Check if email is verified (bypassed for sandbox demo accounts ending in @edufin.edu)
+    const isSandboxAccount = user.email.endsWith('@edufin.edu');
+    if (!user.isEmailVerified && !isSandboxAccount) {
+      return res.status(403).json({
+        message: 'Your email address is not verified yet.',
+        requiresVerification: true,
+        email: user.email
+      });
+    }
+
+    // Login successful: Reset lockout attempts
+    user.loginAttempts = 0;
+    user.lockUntil = undefined;
 
     const { accessToken, refreshToken } = generateTokens({
       id: user._id.toString(),
@@ -95,7 +133,6 @@ export const login = async (req: Request, res: Response) => {
       role: user.role,
     });
 
-    // Save refresh token to user array (supports multi-device sessions)
     user.refreshTokens.push(refreshToken);
     await user.save();
 
@@ -106,12 +143,199 @@ export const login = async (req: Request, res: Response) => {
         name: user.name,
         role: user.role,
         avatar: user.avatar,
+        phoneNumber: user.phoneNumber,
+        isEmailVerified: user.isEmailVerified
       },
       accessToken,
       refreshToken,
     });
   } catch (error) {
     return res.status(500).json({ message: 'Server login error', error });
+  }
+};
+
+export const verifyEmail = async (req: Request, res: Response) => {
+  const { email, code } = req.body;
+
+  if (!email || !code) {
+    return res.status(400).json({ message: 'Email and verification code are required' });
+  }
+
+  try {
+    const user = await User.findOne({
+      email,
+      emailVerificationToken: code,
+      emailVerificationExpiry: { $gt: new Date() }
+    });
+
+    if (!user) {
+      return res.status(400).json({ message: 'Invalid or expired verification code' });
+    }
+
+    user.isEmailVerified = true;
+    user.emailVerificationToken = undefined;
+    user.emailVerificationExpiry = undefined;
+    await user.save();
+
+    // Log in instantly post verification
+    const { accessToken, refreshToken } = generateTokens({
+      id: user._id.toString(),
+      email: user.email,
+      role: user.role
+    });
+
+    user.refreshTokens.push(refreshToken);
+    await user.save();
+
+    return res.json({
+      message: 'Email verified successfully. Welcome onboard!',
+      user: {
+        id: user._id,
+        email: user.email,
+        name: user.name,
+        role: user.role,
+        avatar: user.avatar,
+        isEmailVerified: true
+      },
+      accessToken,
+      refreshToken
+    });
+  } catch (error) {
+    return res.status(500).json({ message: 'Verification transaction error', error });
+  }
+};
+
+export const forgotPassword = async (req: Request, res: Response) => {
+  const { email } = req.body;
+
+  if (!email) {
+    return res.status(400).json({ message: 'Email address is required' });
+  }
+
+  try {
+    const user = await User.findOne({ email });
+    if (!user) {
+      // Don't leak details if user doesn't exist for security reasons, return a generic success
+      return res.json({ message: 'If this account is registered, a password recovery code has been sent.' });
+    }
+
+    const resetToken = Math.floor(100000 + Math.random() * 900000).toString();
+    user.resetPasswordToken = resetToken;
+    user.resetPasswordExpiry = new Date(Date.now() + 1 * 60 * 60 * 1000); // 1 hour
+    await user.save();
+
+    await sendPasswordResetEmail(user.email, user.name, resetToken);
+
+    return res.json({
+      message: 'A password recovery code has been sent to your registered campus email.',
+      email: user.email
+    });
+  } catch (error) {
+    return res.status(500).json({ message: 'Forgot password routing error', error });
+  }
+};
+
+export const resetPassword = async (req: Request, res: Response) => {
+  const { email, code, newPassword } = req.body;
+
+  if (!email || !code || !newPassword) {
+    return res.status(400).json({ message: 'Email, recovery code, and new password are required' });
+  }
+
+  try {
+    const user = await User.findOne({
+      email,
+      resetPasswordToken: code,
+      resetPasswordExpiry: { $gt: new Date() }
+    });
+
+    if (!user) {
+      return res.status(400).json({ message: 'Invalid or expired recovery code' });
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    user.passwordHash = await bcrypt.hash(newPassword, salt);
+    
+    // Clear recovery tokens and lock counters
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpiry = undefined;
+    user.loginAttempts = 0;
+    user.lockUntil = undefined;
+    
+    await user.save();
+
+    return res.json({ message: 'Password has been reset successfully. You can now log in.' });
+  } catch (error) {
+    return res.status(500).json({ message: 'Reset password transaction error', error });
+  }
+};
+
+export const logoutAll = async (req: AuthenticatedRequest, res: Response) => {
+  if (!req.user) {
+    return res.status(401).json({ message: 'Unauthorized' });
+  }
+
+  try {
+    const user = await User.findById(req.user.id);
+    if (user) {
+      user.refreshTokens = []; // Clear all active tokens
+      await user.save();
+    }
+    return res.json({ message: 'Successfully logged out from all active sessions' });
+  } catch (error) {
+    return res.status(500).json({ message: 'Server sessions clearance error', error });
+  }
+};
+
+export const updateProfile = async (req: AuthenticatedRequest, res: Response) => {
+  if (!req.user) {
+    return res.status(401).json({ message: 'Unauthorized' });
+  }
+
+  const { name, phoneNumber, currentPassword, newPassword } = req.body;
+
+  try {
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Optional Password Change validation
+    if (currentPassword && newPassword) {
+      const isMatch = await bcrypt.compare(currentPassword, user.passwordHash);
+      if (!isMatch) {
+        return res.status(400).json({ message: 'Current password provided is incorrect' });
+      }
+      const salt = await bcrypt.genSalt(10);
+      user.passwordHash = await bcrypt.hash(newPassword, salt);
+    }
+
+    // Name and phone number updates
+    if (name) user.name = name;
+    if (phoneNumber !== undefined) user.phoneNumber = phoneNumber;
+
+    // Avatar file upload check (using multer buffer)
+    if (req.file) {
+      const avatarUrl = await uploadToCloudinary(req.file.buffer);
+      user.avatar = avatarUrl;
+    }
+
+    await user.save();
+
+    return res.json({
+      message: 'Profile updated successfully',
+      user: {
+        id: user._id,
+        email: user.email,
+        name: user.name,
+        role: user.role,
+        avatar: user.avatar,
+        phoneNumber: user.phoneNumber,
+        isEmailVerified: user.isEmailVerified
+      }
+    });
+  } catch (error) {
+    return res.status(500).json({ message: 'Error updating user profile', error });
   }
 };
 
@@ -125,13 +349,11 @@ export const refreshToken = async (req: Request, res: Response) => {
   try {
     const user = await User.findOne({ refreshTokens: refreshToken });
     if (!user) {
-      // Re-use detection: if someone attempts to refresh with a token that is not found,
-      // it might have been stolen and already used. We should consider invalidating all.
       try {
         const decoded = jwt.verify(refreshToken, REFRESH_SECRET) as { id: string };
         const hackedUser = await User.findById(decoded.id);
         if (hackedUser) {
-          hackedUser.refreshTokens = []; // Revoke all sessions
+          hackedUser.refreshTokens = [];
           await hackedUser.save();
         }
       } catch (_) {}
@@ -139,18 +361,15 @@ export const refreshToken = async (req: Request, res: Response) => {
       return res.status(403).json({ message: 'Invalid or expired refresh token' });
     }
 
-    // Verify token
     try {
       const decoded = jwt.verify(refreshToken, REFRESH_SECRET) as { id: string; email: string; role: string };
 
-      // Generate new pair
       const tokens = generateTokens({
         id: decoded.id,
         email: decoded.email,
         role: decoded.role,
       });
 
-      // Rotate token: Remove the old one, add the new one
       user.refreshTokens = user.refreshTokens.filter((t) => t !== refreshToken);
       user.refreshTokens.push(tokens.refreshToken);
       await user.save();
@@ -160,7 +379,6 @@ export const refreshToken = async (req: Request, res: Response) => {
         refreshToken: tokens.refreshToken,
       });
     } catch (err) {
-      // Token expired or invalid signature
       user.refreshTokens = user.refreshTokens.filter((t) => t !== refreshToken);
       await user.save();
       return res.status(403).json({ message: 'Expired refresh token', error: err });

@@ -8,6 +8,7 @@ export interface UserProfile {
   name: string;
   role: UserRole;
   avatar?: string;
+  phoneNumber?: string;
 }
 
 interface AuthContextType {
@@ -56,6 +57,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           email: decoded.email,
           name: decoded.name || (decoded.role + ' User'),
           role: decoded.role,
+          avatar: decoded.avatar,
+          phoneNumber: decoded.phoneNumber,
         });
         setIsLoading(false);
         return true;
@@ -96,9 +99,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return true;
       } else {
         const errData = await response.json();
-        console.error('Login error response:', errData.message);
+        if (response.status === 403 && errData.requiresVerification) {
+          sessionStorage.setItem('edufin_pending_verify_email', errData.email);
+          setIsLoading(false);
+          throw new Error('VERIFICATION_REQUIRED');
+        }
+        setIsLoading(false);
+        throw new Error(errData.message || 'Invalid credentials');
       }
-    } catch (err) {
+    } catch (err: any) {
+      if (err.message === 'VERIFICATION_REQUIRED' || err.message.includes('locked') || err.message.includes('attempts')) {
+        setIsLoading(false);
+        throw err;
+      }
       console.warn('API connection failed, falling back to mock login credentials check...', err);
     }
 

@@ -19,9 +19,10 @@ import {
 
 interface SidebarProps {
   onNavigate?: () => void;
+  onProfileClick?: () => void;
 }
 
-export const Sidebar: React.FC<SidebarProps> = ({ onNavigate }) => {
+export const Sidebar: React.FC<SidebarProps> = ({ onNavigate, onProfileClick }) => {
   const { user, logout } = useAuth();
 
   if (!user) return null;
@@ -125,7 +126,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ onNavigate }) => {
 
       {/* Footer Profile */}
       <div className="mt-auto border-t border-slate-800/80 pt-5">
-        <div className="mb-4 flex items-center gap-3">
+        <div
+          onClick={onProfileClick}
+          className="mb-4 flex items-center gap-3 cursor-pointer p-1.5 rounded-xl hover:bg-slate-800/40 transition-all hover:scale-102 active:scale-98"
+        >
           <img
             src={user.avatar || `https://api.dicebear.com/7.x/adventurer/svg?seed=${user.role}`}
             alt={user.name}
