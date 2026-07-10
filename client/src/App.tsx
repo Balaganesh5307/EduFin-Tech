@@ -15,6 +15,9 @@ import { FeesPayments } from './pages/student/fees-payments';
 import { PersonalTracker } from './pages/student/personal-tracker';
 import { Scholarships } from './pages/student/scholarships';
 import { EducationLoans } from './pages/student/education-loans';
+import { AdminFeeManagement } from './pages/admin/fee-management';
+import { RevenueAnalytics } from './pages/admin/revenue-analytics';
+import { ParentChildFees } from './pages/parent/child-fees';
 import { AIChatbot } from './components/chatbot';
 
 export const App: React.FC = () => {
@@ -39,14 +42,16 @@ export const App: React.FC = () => {
               <Route path="/student/profile" element={<StudentProfile />} />
               <Route path="/faculty/attendance" element={<AttendanceLedger />} />
               
-              {/* Placeholders for other sub-links to keep Router robust */}
+              {/* Core Fee Management & Payment Ecosystem routes */}
               <Route path="/fees" element={<FeesPayments />} />
-              <Route path="/child-fees" element={<DashboardsIndex />} />
+              <Route path="/child-fees" element={<ParentChildFees />} />
               <Route path="/tracker" element={<PersonalTracker />} />
               <Route path="/scholarships" element={<Scholarships />} />
               <Route path="/scholarships-approvals" element={<DashboardsIndex />} />
               <Route path="/loans" element={<EducationLoans />} />
               <Route path="/loan-pipelines" element={<DashboardsIndex />} />
+              <Route path="/revenue" element={<RevenueAnalytics />} />
+              <Route path="/admin/fees" element={<AdminFeeManagement />} />
               <Route path="/attendance" element={<DashboardsIndex />} />
               <Route path="/progress" element={<DashboardsIndex />} />
               <Route path="/reports" element={<DashboardsIndex />} />

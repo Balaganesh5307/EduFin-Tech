@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import { Sidebar } from '../components/sidebar';
 import { useAuth } from '../contexts/auth.context';
@@ -6,16 +6,40 @@ import { ProfileModal } from '../components/profile-modal';
 import { Bell, Search, Menu, X, Sparkles, BookOpen } from 'lucide-react';
 
 export const DashboardLayout: React.FC = () => {
-  const { user } = useAuth();
+  const { user, accessToken } = useAuth();
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState<boolean>(false);
   const [showNotifications, setShowNotifications] = useState<boolean>(false);
   const [profileOpen, setProfileOpen] = useState<boolean>(false);
 
-  const notifications = [
-    { id: '1', title: 'Upcoming Tuition Fee Due', text: '₹35,000 Tuition installment is due on 15th August.', time: '2h ago', unread: true },
-    { id: '2', title: 'Scholarship Recommended', text: 'AI matching found "Merit-Cum-Means Scholarship" matching your credentials.', time: '1d ago', unread: false }
-  ];
+  const [notifications, setNotifications] = useState<any[]>([]);
+
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      try {
+        const response = await fetch('/api/fee-management/notifications', {
+          headers: { Authorization: `Bearer ${accessToken}` }
+        });
+        if (response.ok) {
+          const list = await response.json();
+          const mapped = list.map((n: any) => ({
+            id: n._id,
+            title: n.title,
+            text: n.message,
+            time: new Date(n.createdAt).toLocaleDateString(),
+            unread: !n.isRead
+          }));
+          setNotifications(mapped);
+        }
+      } catch (_) {}
+    };
+
+    if (user && accessToken) {
+      fetchNotifications();
+      const timer = setInterval(fetchNotifications, 30000);
+      return () => clearInterval(timer);
+    }
+  }, [user, accessToken]);
 
   // Resolve page header titles based on path
   const getHeaderTitle = () => {
@@ -24,7 +48,10 @@ export const DashboardLayout: React.FC = () => {
         return 'Overview';
       case '/fees':
       case '/child-fees':
+      case '/admin/fees':
         return 'Fee Hub';
+      case '/revenue':
+        return 'Revenue Analytics';
       case '/tracker':
         return 'Expense Tracker';
       case '/scholarships':

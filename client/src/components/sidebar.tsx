@@ -64,6 +64,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onNavigate, onProfileClick }) 
         return [
           ...common,
           { to: '/admin/students', label: 'Student Directory', icon: Users },
+          { to: '/admin/fees', label: 'Fee Configuration', icon: CreditCard },
           { to: '/revenue', label: 'Revenue Analytics', icon: TrendingUp },
           { to: '/scholarships-approvals', label: 'Scholarship Center', icon: Award },
           { to: '/loan-pipelines', label: 'Loan Pipelines', icon: GraduationCap }
@@ -73,6 +74,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onNavigate, onProfileClick }) 
         return [
           ...common,
           { to: '/admin/students', label: 'Student Directory', icon: Users },
+          { to: '/admin/fees', label: 'Fee Configuration', icon: CreditCard },
           { to: '/revenue', label: 'Revenue Analytics', icon: TrendingUp },
           { to: '/scholarships-approvals', label: 'Scholarship Center', icon: Award },
           { to: '/loan-pipelines', label: 'Loan Pipelines', icon: GraduationCap },

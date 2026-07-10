@@ -14,8 +14,10 @@ import studentRoutes from './routes/student.routes';
 import academicRoutes from './routes/academic-mgmt.routes';
 import attendanceRoutes from './routes/attendance.routes';
 import studentFinanceRoutes from './routes/student-finance.routes';
+import feeManagementRoutes from './routes/fee-management.routes';
 
 import { User } from './models/user.model';
+import { Student, Parent, Department, Course, Semester } from './models/academic.models';
 
 dotenv.config();
 
@@ -41,6 +43,7 @@ app.use('/api/students', studentRoutes);
 app.use('/api/academic', academicRoutes);
 app.use('/api/attendance', attendanceRoutes);
 app.use('/api/student-finance', studentFinanceRoutes);
+app.use('/api/fee-management', feeManagementRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {
@@ -113,6 +116,79 @@ const seedUsers = async () => {
       console.log(' - faculty@edufin.edu (Faculty)');
       console.log(' - parent@edufin.edu (Parent)');
       console.log(' - student@edufin.edu (Student)');
+    }
+
+    // Ensure academic profiles are initialized for student@edufin.edu and parent@edufin.edu
+    const studentUser = await User.findOne({ email: 'student@edufin.edu' });
+    const parentUser = await User.findOne({ email: 'parent@edufin.edu' });
+
+    if (studentUser) {
+      let dept = await Department.findOne({ code: 'CSE' });
+      if (!dept) {
+        dept = new Department({
+          name: 'Computer Science & Engineering',
+          code: 'CSE',
+          description: 'Department of Computer Science & Engineering'
+        });
+        await dept.save();
+      }
+
+      let course = await Course.findOne({ code: 'BTECH-CSE' });
+      if (!course) {
+        course = new Course({
+          name: 'Bachelor of Technology in Computer Science',
+          code: 'BTECH-CSE',
+          credits: 180,
+          department: dept._id
+        });
+        await course.save();
+      }
+
+      let sem = await Semester.findOne({ name: 'Semester 5' });
+      if (!sem) {
+        sem = new Semester({
+          name: 'Semester 5',
+          startDate: new Date('2026-06-01'),
+          endDate: new Date('2026-11-30'),
+          isActive: true
+        });
+        await sem.save();
+      }
+
+      let parentProfile = null;
+      if (parentUser) {
+        parentProfile = await Parent.findOne({ user: parentUser._id });
+        if (!parentProfile) {
+          parentProfile = new Parent({
+            user: parentUser._id,
+            children: [],
+            relation: 'Father',
+            occupation: 'Business'
+          });
+          await parentProfile.save();
+        }
+      }
+
+      let studentProfile = await Student.findOne({ user: studentUser._id });
+      if (!studentProfile) {
+        studentProfile = new Student({
+          user: studentUser._id,
+          studentId: 'STU-2026-5831',
+          rollNumber: '26-CSE-041',
+          department: dept._id,
+          course: course._id,
+          currentSemester: sem._id,
+          parent: parentProfile ? parentProfile._id : undefined,
+          admissionDate: new Date()
+        });
+        await studentProfile.save();
+
+        if (parentProfile) {
+          parentProfile.children.push(studentProfile._id);
+          await parentProfile.save();
+        }
+        console.log('Demo Student and Parent academic profiles seeded successfully.');
+      }
     }
   } catch (error) {
     console.error('Error seeding database users:', error);
