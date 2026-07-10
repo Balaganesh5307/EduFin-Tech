@@ -535,7 +535,7 @@ export const payEMIInstallment = async (req: AuthenticatedRequest, res: Response
     if (!loan) return res.status(404).json({ message: 'Loan account not found' });
 
     // Mark the installment as paid
-    const inst = loan.installments.id(installmentId);
+    const inst = loan.installments.find((i: any) => i._id?.toString() === installmentId);
     if (inst) {
       inst.status = 'Paid';
       inst.paidAt = new Date();

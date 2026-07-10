@@ -14,13 +14,13 @@ const generateTokens = (user: { id: string; email: string; role: string }) => {
   const accessToken = jwt.sign(
     { id: user.id, email: user.email, role: user.role },
     ACCESS_SECRET,
-    { expiresIn: process.env.JWT_ACCESS_EXPIRY || '15m' }
+    { expiresIn: (process.env.JWT_ACCESS_EXPIRY || '15m') as any }
   );
 
   const refreshToken = jwt.sign(
     { id: user.id, email: user.email, role: user.role },
     REFRESH_SECRET,
-    { expiresIn: process.env.JWT_REFRESH_EXPIRY || '7d' }
+    { expiresIn: (process.env.JWT_REFRESH_EXPIRY || '7d') as any }
   );
 
   return { accessToken, refreshToken };

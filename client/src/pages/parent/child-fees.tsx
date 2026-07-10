@@ -9,39 +9,43 @@ import {
   Receipt,
   Download,
   Calendar,
+  Users,
   Clock,
   Sparkles,
   Info
 } from 'lucide-react';
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from 'recharts';
 
-export const FeesPayments: React.FC = () => {
+export const ParentChildFees: React.FC = () => {
   const { user, accessToken } = useAuth();
 
+  const [studentDetails, setStudentDetails] = useState<any>(null);
   const [summary, setSummary] = useState<any>({ totalAssigned: 0, totalPaid: 0, balanceDues: 0 });
-  const [fees, setFees] = useState<any[]>([]);
-  const [history, setHistory] = useState<any[]>([]);
+  const [feesList, setFeesList] = useState<any[]>([]);
+  const [paymentsList, setPaymentsList] = useState<any[]>([]);
   const [ledgerEntries, setLedgerEntries] = useState<any[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
-  
+
+  // Payment triggers
   const [activeInvoice, setActiveInvoice] = useState<any>(null);
   const [payModalOpen, setPayModalOpen] = useState<boolean>(false);
 
-  const fetchStudentFees = async () => {
+  const fetchChildFeesData = async () => {
     setLoading(true);
     try {
-      // 1. Fetch live student fee schedule dashboard
-      const res = await fetch('/api/fee-management/dashboard/student', {
+      // 1. Fetch dashboard data which automatically resolves the child for parent
+      const dashboardRes = await fetch('/api/fee-management/dashboard/student', {
         headers: { Authorization: `Bearer ${accessToken}` }
       });
-      if (res.ok) {
-        const data = await res.json();
+      if (dashboardRes.ok) {
+        const data = await dashboardRes.json();
+        setStudentDetails(data.studentDetails);
         setSummary(data.summary);
-        setFees(data.fees || []);
-        setHistory(data.payments || []);
+        setFeesList(data.fees || []);
+        setPaymentsList(data.payments || []);
       }
 
-      // 2. Fetch ledger details
+      // 2. Fetch Ledger details
       const ledgerRes = await fetch('/api/fee-management/ledger/self', {
         headers: { Authorization: `Bearer ${accessToken}` }
       });
@@ -50,13 +54,14 @@ export const FeesPayments: React.FC = () => {
         setLedgerEntries(data.entries || []);
       }
     } catch (err) {
-      console.warn('Dashboard API error, loading backups...', err);
+      console.warn('Parent portal fetch error loading preset backups...', err);
     }
+
     setLoading(false);
   };
 
   useEffect(() => {
-    if (user) fetchStudentFees();
+    if (user) fetchChildFeesData();
   }, [user]);
 
   const triggerPayment = (invoice: any) => {
@@ -70,8 +75,8 @@ export const FeesPayments: React.FC = () => {
 
   const handlePaymentSuccess = () => {
     setPayModalOpen(false);
-    alert('Payment successfully captured! Updated student ledgers.');
-    fetchStudentFees(); // Reload data
+    alert('Payment captured successfully! Child ledger and billing balances updated.');
+    fetchChildFeesData(); // Reload statistics
   };
 
   if (loading) {
@@ -92,23 +97,27 @@ export const FeesPayments: React.FC = () => {
   ];
 
   return (
-    <div className="space-y-6 text-left">
+    <div className="space-y-6 text-left relative">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-extrabold text-slate-100 flex items-center gap-2 leading-none">
-          Fees & Payments Hub
-          <Receipt className="h-5 w-5 text-indigo-400" />
-        </h1>
-        <p className="text-sm text-slate-400 mt-1">
-          Review pending dues structures, submit term installments, and verify payment receipt logs.
-        </p>
+      <div className="glass-panel border-slate-900 rounded-3xl p-6 flex flex-col sm:flex-row items-center gap-4 text-left">
+        <div className="h-16 w-16 rounded-2xl bg-indigo-600/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 shrink-0">
+          <Users className="h-8 w-8" />
+        </div>
+        <div>
+          <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block">Dependent Student Registered</span>
+          <h3 className="text-xl font-bold text-slate-200 mt-0.5">{studentDetails?.name || 'Alex Johnson'}</h3>
+          <p className="text-xs text-slate-400 mt-1">
+            Roll: <strong>{studentDetails?.rollNumber || '26-CSE-041'}</strong> | Department: <strong>{studentDetails?.department?.name || 'Computer Science'}</strong> | semester: <strong>{studentDetails?.semester?.name || 'Semester 5'}</strong>
+          </p>
+        </div>
       </div>
 
+      {/* Row 2: Metrics */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        {/* Cleared vs Outstanding Gauge */}
+        {/* Allocations Gauge */}
         <div className="lg:col-span-4 glass-panel border-slate-900 rounded-3xl p-6 flex flex-col items-center">
           <h4 className="text-xs font-bold text-slate-500 uppercase tracking-widest text-center mb-4">
-            Payment Progress Allocation
+            Child Payment Allocation
           </h4>
           
           <div className="h-44 w-full flex items-center justify-center">
@@ -139,56 +148,54 @@ export const FeesPayments: React.FC = () => {
           <div className="w-full space-y-3 mt-2 text-xs">
             <div className="flex justify-between items-center bg-slate-900/40 p-2.5 rounded-xl border border-slate-900">
               <span className="flex items-center gap-2 text-slate-400">
-                <span className="h-2 w-2 rounded-full bg-emerald-500"></span> Cleared Amount
+                <span className="h-2 w-2 rounded-full bg-emerald-500"></span> Total Paid Fees
               </span>
               <span className="font-bold text-slate-200">₹{summary.totalPaid.toLocaleString()}</span>
             </div>
             <div className="flex justify-between items-center bg-slate-900/40 p-2.5 rounded-xl border border-slate-900">
               <span className="flex items-center gap-2 text-slate-400">
-                <span className="h-2 w-2 rounded-full bg-indigo-500"></span> Outstanding Dues
+                <span className="h-2 w-2 rounded-full bg-indigo-500"></span> Pending Balance
               </span>
               <span className="font-bold text-slate-200">₹{summary.balanceDues.toLocaleString()}</span>
             </div>
           </div>
         </div>
 
-        {/* Bill Installments */}
+        {/* Installment Grid */}
         <div className="lg:col-span-8 space-y-6">
           <div className="glass-panel border-slate-900 rounded-3xl p-6 space-y-4">
             <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
-              <CreditCard className="h-4.5 w-4.5 text-indigo-400" /> Installments Due Schedule
+              <CreditCard className="h-4.5 w-4.5 text-indigo-400" /> Outstanding Bills Schedule
             </h4>
-            
+
             <div className="divide-y divide-slate-900/60 text-xs">
-              {fees.length === 0 ? (
-                <p className="py-6 text-center text-slate-500 italic">No assigned fees outstanding.</p>
+              {feesList.length === 0 ? (
+                <p className="py-6 text-center text-slate-500 italic">No pending fees or invoices listed.</p>
               ) : (
-                fees.map((fee) => (
-                  <div key={fee._id} className="py-4 flex flex-col sm:flex-row sm:items-center justify-between first:pt-0 last:pb-0 gap-3">
+                feesList.map((f) => (
+                  <div key={f._id} className="py-4 flex flex-col sm:flex-row justify-between sm:items-center gap-3">
                     <div className="space-y-1">
-                      <h5 className="font-bold text-slate-200">{fee.title}</h5>
-                      <span className="text-[10px] text-slate-500 block">
-                        Cycle: {fee.academicYear} | Due: {new Date(fee.dueDate).toLocaleDateString()}
-                      </span>
+                      <h5 className="font-bold text-slate-200">{f.title}</h5>
+                      <span className="text-[10px] text-slate-500 block">Cycle: {f.academicYear} | Due: {new Date(f.dueDate).toLocaleDateString()}</span>
                     </div>
 
                     <div className="flex items-center gap-4 justify-between sm:justify-end">
                       <div className="text-right">
-                        <span className="font-bold text-slate-200 block">₹{fee.balanceAmount.toLocaleString()}</span>
+                        <span className="font-bold text-slate-200 block">₹{f.balanceAmount.toLocaleString()}</span>
                         <span className={`inline-block px-1.5 py-0.5 mt-0.5 rounded text-[8px] font-bold uppercase tracking-wider ${
-                          fee.status === 'Paid'
+                          f.status === 'Paid'
                             ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
                             : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
                         }`}>
-                          {fee.status}
+                          {f.status}
                         </span>
                       </div>
-                      {fee.status !== 'Paid' && (
+                      {f.status !== 'Paid' && (
                         <button
-                          onClick={() => triggerPayment(fee)}
+                          onClick={() => triggerPayment(f)}
                           className="bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-1.5 px-3 rounded-lg hover:shadow-md active:scale-95 transition-all"
                         >
-                          Quick Pay
+                          Pay Dues
                         </button>
                       )}
                     </div>
@@ -200,23 +207,21 @@ export const FeesPayments: React.FC = () => {
         </div>
       </div>
 
-      {/* Receipts and Ledger Timeline */}
+      {/* Receipts and Ledger Split */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Payment Receipts History */}
+        {/* Payment History */}
         <div className="glass-panel border-slate-900 rounded-3xl p-6 space-y-4">
-          <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
-            <Receipt className="h-4.5 w-4.5 text-indigo-400" /> Historic Payments & Receipts
-          </h4>
+          <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest">Receipts Download Ledger</h4>
           
           <div className="divide-y divide-slate-900/60 text-[11px] max-h-72 overflow-y-auto pr-1">
-            {history.length === 0 ? (
-              <p className="py-8 text-center text-slate-500 italic">No payments logged yet.</p>
+            {paymentsList.length === 0 ? (
+              <p className="py-8 text-center text-slate-500 italic">No successful payment receipts found.</p>
             ) : (
-              history.map((p) => (
+              paymentsList.map((p) => (
                 <div key={p._id || p.transactionId} className="py-3 flex justify-between items-center">
                   <div>
                     <h5 className="font-bold text-slate-300">{p.receiptNumber}</h5>
-                    <span className="text-[9px] text-slate-500 font-mono block">Txn ID: {p.transactionId}</span>
+                    <span className="text-[9px] text-slate-500 font-mono block">Txn: {p.transactionId}</span>
                   </div>
                   <div className="flex gap-4 items-center">
                     <div className="text-right">
@@ -224,11 +229,10 @@ export const FeesPayments: React.FC = () => {
                       <span className="text-[9px] text-slate-500">{new Date(p.paidAt).toLocaleDateString()}</span>
                     </div>
                     <button
-                      onClick={() => alert(`Receipt PDF downloaded for receipt token: ${p.receiptNumber}`)}
-                      className="p-1 hover:bg-slate-900 rounded-lg text-slate-400 hover:text-indigo-400 transition-colors"
-                      title="Download receipt PDF"
+                      onClick={() => alert(`Receipt downloaded for invoice token ${p.receiptNumber}`)}
+                      className="p-1 text-slate-500 hover:text-indigo-400"
                     >
-                      <Download className="h-4.5 w-4.5" />
+                      <Download className="h-4 w-4" />
                     </button>
                   </div>
                 </div>
@@ -237,15 +241,15 @@ export const FeesPayments: React.FC = () => {
           </div>
         </div>
 
-        {/* Chronological Ledger Entries */}
+        {/* Ledger Statement Timeline */}
         <div className="glass-panel border-slate-900 rounded-3xl p-6 space-y-4">
           <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
-            Chronological Statement Ledger Timeline
+            Child Ledger Statement History
           </h4>
 
           <div className="space-y-4 max-h-72 overflow-y-auto pr-1 text-[11px] pt-1">
             {ledgerEntries.length === 0 ? (
-              <p className="py-8 text-center text-slate-500 italic">No transactions posted to your ledger statements.</p>
+              <p className="py-8 text-center text-slate-500 italic">No ledger transactions posted.</p>
             ) : (
               ledgerEntries.map((l, index) => (
                 <div key={l._id || index} className="flex gap-3">
@@ -262,7 +266,7 @@ export const FeesPayments: React.FC = () => {
                     </div>
                     <div className="flex justify-between text-[9px] text-slate-500 mt-0.5">
                       <span>Date: {new Date(l.date).toLocaleDateString()}</span>
-                      <span>Balance Outstanding: ₹{l.balance.toLocaleString()}</span>
+                      <span>Dues Balance: ₹{l.balance.toLocaleString()}</span>
                     </div>
                   </div>
                 </div>
