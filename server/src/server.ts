@@ -13,6 +13,7 @@ import aiRoutes from './routes/ai.routes';
 import studentRoutes from './routes/student.routes';
 import academicRoutes from './routes/academic-mgmt.routes';
 import attendanceRoutes from './routes/attendance.routes';
+import studentFinanceRoutes from './routes/student-finance.routes';
 
 import { User } from './models/user.model';
 
@@ -39,6 +40,7 @@ app.use('/api/ai', aiRoutes);
 app.use('/api/students', studentRoutes);
 app.use('/api/academic', academicRoutes);
 app.use('/api/attendance', attendanceRoutes);
+app.use('/api/student-finance', studentFinanceRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

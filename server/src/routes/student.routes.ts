@@ -13,8 +13,8 @@ import { uploadMiddleware } from '../services/upload.service';
 
 const router = Router();
 
-// Standard profile querying (Admins, SuperAdmins, Faculty)
-router.get('/', authenticateJWT, authorizeRoles('Admin', 'SuperAdmin', 'Faculty'), getStudents);
+// Standard profile querying (Admins, SuperAdmins, Faculty, Students)
+router.get('/', authenticateJWT, authorizeRoles('Admin', 'SuperAdmin', 'Faculty', 'Student'), getStudents);
 router.get('/export', authenticateJWT, authorizeRoles('Admin', 'SuperAdmin'), exportStudents);
 
 // Admissions and Lifecycle management (Admin & SuperAdmin only)

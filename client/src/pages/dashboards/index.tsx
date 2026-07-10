@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/auth.context';
 import { PaymentModal } from '../../components/payment-modal';
+import { StudentDashboard } from '../student/dashboard';
 import { motion } from 'framer-motion';
 import {
   ResponsiveContainer,
@@ -808,7 +809,7 @@ export const DashboardsIndex: React.FC = () => {
   const getDashboardBody = () => {
     switch (user.role) {
       case 'Student':
-        return renderStudent();
+        return <StudentDashboard />;
       case 'Parent':
         return renderParent();
       case 'Faculty':
