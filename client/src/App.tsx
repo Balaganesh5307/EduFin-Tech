@@ -11,6 +11,10 @@ import { DashboardsIndex } from './pages/dashboards/index';
 import { StudentDirectory } from './pages/admin/student-directory';
 import { StudentProfile } from './pages/student/student-profile';
 import { AttendanceLedger } from './pages/faculty/attendance-ledger';
+import { FeesPayments } from './pages/student/fees-payments';
+import { PersonalTracker } from './pages/student/personal-tracker';
+import { Scholarships } from './pages/student/scholarships';
+import { EducationLoans } from './pages/student/education-loans';
 import { AIChatbot } from './components/chatbot';
 
 export const App: React.FC = () => {
@@ -36,12 +40,12 @@ export const App: React.FC = () => {
               <Route path="/faculty/attendance" element={<AttendanceLedger />} />
               
               {/* Placeholders for other sub-links to keep Router robust */}
-              <Route path="/fees" element={<DashboardsIndex />} />
+              <Route path="/fees" element={<FeesPayments />} />
               <Route path="/child-fees" element={<DashboardsIndex />} />
-              <Route path="/tracker" element={<DashboardsIndex />} />
-              <Route path="/scholarships" element={<DashboardsIndex />} />
+              <Route path="/tracker" element={<PersonalTracker />} />
+              <Route path="/scholarships" element={<Scholarships />} />
               <Route path="/scholarships-approvals" element={<DashboardsIndex />} />
-              <Route path="/loans" element={<DashboardsIndex />} />
+              <Route path="/loans" element={<EducationLoans />} />
               <Route path="/loan-pipelines" element={<DashboardsIndex />} />
               <Route path="/attendance" element={<DashboardsIndex />} />
               <Route path="/progress" element={<DashboardsIndex />} />
