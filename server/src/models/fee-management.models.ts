@@ -230,7 +230,7 @@ export interface INotificationEvent extends Document {
   user: mongoose.Types.ObjectId; // User ref
   title: string;
   message: string;
-  type: 'FeeAssigned' | 'PaymentSuccess' | 'PaymentFailed' | 'DueTomorrow' | 'LateFeeApplied' | 'ReceiptGenerated';
+  type: 'FeeAssigned' | 'PaymentSuccess' | 'PaymentFailed' | 'DueTomorrow' | 'LateFeeApplied' | 'ReceiptGenerated' | 'BudgetExceeded' | 'GoalAchieved' | 'UpcomingBill' | 'MilestoneReached';
   isRead: boolean;
 }
 
@@ -241,7 +241,7 @@ const NotificationEventSchema = new Schema<INotificationEvent>({
   type: {
     type: String,
     required: true,
-    enum: ['FeeAssigned', 'PaymentSuccess', 'PaymentFailed', 'DueTomorrow', 'LateFeeApplied', 'ReceiptGenerated']
+    enum: ['FeeAssigned', 'PaymentSuccess', 'PaymentFailed', 'DueTomorrow', 'LateFeeApplied', 'ReceiptGenerated', 'BudgetExceeded', 'GoalAchieved', 'UpcomingBill', 'MilestoneReached']
   },
   isRead: { type: Boolean, default: false }
 }, { timestamps: true });

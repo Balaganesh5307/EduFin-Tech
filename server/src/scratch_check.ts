@@ -1,35 +1,59 @@
-import mongoose from 'mongoose';
-import dotenv from 'dotenv';
-import { User } from './models/user.model';
-import { Student, Department, Semester, Course, Parent } from './models/academic.models';
+import http from 'http';
 
-dotenv.config();
+// 1. First login as student to get a valid signed token
+const loginData = JSON.stringify({
+  email: 'student@edufin.edu',
+  password: 'password123'
+});
 
-const mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/edufin';
-
-async function check() {
-  await mongoose.connect(mongoUri);
-  console.log('Connected to MongoDB');
-
-  const depts = await Department.find();
-  const sems = await Semester.find();
-  const courses = await Course.find();
-  
-  console.log('Departments count:', depts.length);
-  console.log('Semesters count:', sems.length);
-  console.log('Courses count:', courses.length);
-
-  if (depts.length > 0) {
-    console.log('First Department:', depts[0]);
+const req = http.request({
+  hostname: 'localhost',
+  port: 5000,
+  path: '/api/auth/login',
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'Content-Length': Buffer.byteLength(loginData)
   }
-  if (sems.length > 0) {
-    console.log('First Semester:', sems[0]);
-  }
-  if (courses.length > 0) {
-    console.log('First Course:', courses[0]);
-  }
+}, (res) => {
+  let body = '';
+  res.on('data', (chunk) => body += chunk);
+  res.on('end', () => {
+    try {
+      const parsed = JSON.parse(body);
+      console.log('Login status:', res.statusCode);
+      if (parsed.accessToken) {
+        // 2. Hit /api/dashboard with the token
+        const token = parsed.accessToken;
+        const dashReq = http.request({
+          hostname: 'localhost',
+          port: 5000,
+          path: '/api/dashboard',
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        }, (dashRes) => {
+          let dashBody = '';
+          dashRes.on('data', (chunk) => dashBody += chunk);
+          dashRes.on('end', () => {
+            console.log('Dashboard status:', dashRes.statusCode);
+            console.log('Dashboard response:', dashBody);
+          });
+        });
+        dashReq.on('error', (err) => console.error('Dashboard request error:', err));
+        dashReq.end();
+      } else {
+        console.error('No token returned:', parsed);
+      }
+    } catch (e) {
+      console.error('Failed to parse login response:', body, e);
+    }
+  });
+});
 
-  await mongoose.disconnect();
-}
-
-check().catch(console.error);
+req.on('error', (err) => {
+  console.error('Login request error:', err);
+});
+req.write(loginData);
+req.end();
