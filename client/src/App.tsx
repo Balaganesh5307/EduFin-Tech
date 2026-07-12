@@ -16,6 +16,7 @@ import { PersonalTracker } from './pages/student/personal-tracker';
 import { Scholarships } from './pages/student/scholarships';
 import { EducationLoans } from './pages/student/education-loans';
 import { ScholarshipCenter } from './pages/admin/scholarship-center';
+import { LoanCenter } from './pages/admin/loan-center';
 import { AdminFeeManagement } from './pages/admin/fee-management';
 import { RevenueAnalytics } from './pages/admin/revenue-analytics';
 import { ParentChildFees } from './pages/parent/child-fees';
@@ -50,7 +51,7 @@ export const App: React.FC = () => {
               <Route path="/scholarships" element={<Scholarships />} />
               <Route path="/scholarships-approvals" element={<ScholarshipCenter />} />
               <Route path="/loans" element={<EducationLoans />} />
-              <Route path="/loan-pipelines" element={<DashboardsIndex />} />
+              <Route path="/loan-pipelines" element={<LoanCenter />} />
               <Route path="/revenue" element={<RevenueAnalytics />} />
               <Route path="/admin/fees" element={<AdminFeeManagement />} />
               <Route path="/attendance" element={<DashboardsIndex />} />
