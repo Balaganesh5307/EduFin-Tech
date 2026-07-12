@@ -17,6 +17,7 @@ import studentFinanceRoutes from './routes/student-finance.routes';
 import feeManagementRoutes from './routes/fee-management.routes';
 import personalFinanceRoutes from './routes/personal-finance.routes';
 import scholarshipRoutes from './routes/scholarship.routes';
+import loanRoutes from './routes/loan.routes';
 
 import { User } from './models/user.model';
 import { Student, Parent, Department, Course, Semester } from './models/academic.models';
@@ -48,6 +49,7 @@ app.use('/api/student-finance', studentFinanceRoutes);
 app.use('/api/fee-management', feeManagementRoutes);
 app.use('/api/personal-finance', personalFinanceRoutes);
 app.use('/api/scholarships', scholarshipRoutes);
+app.use('/api/loans', loanRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {
