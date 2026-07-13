@@ -23,6 +23,7 @@ import { ScholarshipCenter } from './pages/admin/scholarship-center';
 import { LoanCenter } from './pages/admin/loan-center';
 import { AdminFeeManagement } from './pages/admin/fee-management';
 import { RevenueAnalytics } from './pages/admin/revenue-analytics';
+import { AdminAnalytics } from './pages/admin/analytics';
 import { ParentChildFees } from './pages/parent/child-fees';
 import { ParentAcademics } from './pages/parent/academics';
 import { ParentFinancials } from './pages/parent/financials';
@@ -60,6 +61,7 @@ export const App: React.FC = () => {
               <Route path="/loans" element={<EducationLoans />} />
               <Route path="/loan-pipelines" element={<LoanCenter />} />
               <Route path="/revenue" element={<RevenueAnalytics />} />
+              <Route path="/analytics" element={<AdminAnalytics />} />
               <Route path="/admin/fees" element={<AdminFeeManagement />} />
               <Route path="/attendance" element={<DashboardsIndex />} />
               <Route path="/progress" element={<DashboardsIndex />} />

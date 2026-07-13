@@ -73,7 +73,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onNavigate, onProfileClick }) 
           ...common,
           { to: '/admin/students', label: 'Student Directory', icon: Users },
           { to: '/admin/fees', label: 'Fee Configuration', icon: CreditCard },
-          { to: '/revenue', label: 'Revenue Analytics', icon: TrendingUp },
+          { to: '/analytics', label: 'Analytics & BI', icon: TrendingUp },
           { to: '/scholarships-approvals', label: 'Scholarship Center', icon: Award },
           { to: '/loan-pipelines', label: 'Loan Pipelines', icon: GraduationCap }
         ];
@@ -83,7 +83,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onNavigate, onProfileClick }) 
           ...common,
           { to: '/admin/students', label: 'Student Directory', icon: Users },
           { to: '/admin/fees', label: 'Fee Configuration', icon: CreditCard },
-          { to: '/revenue', label: 'Revenue Analytics', icon: TrendingUp },
+          { to: '/analytics', label: 'Analytics & BI', icon: TrendingUp },
           { to: '/scholarships-approvals', label: 'Scholarship Center', icon: Award },
           { to: '/loan-pipelines', label: 'Loan Pipelines', icon: GraduationCap },
           { to: '/audit-logs', label: 'System Audit Logs', icon: FolderLock }
