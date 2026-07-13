@@ -11,6 +11,10 @@ import { DashboardsIndex } from './pages/dashboards/index';
 import { StudentDirectory } from './pages/admin/student-directory';
 import { StudentProfile } from './pages/student/student-profile';
 import { AttendanceLedger } from './pages/faculty/attendance-ledger';
+import { FacultyMarks } from './pages/faculty/marks';
+import { FacultyAnnouncements } from './pages/faculty/announcements';
+import { FacultyMessaging } from './pages/faculty/messaging';
+import { FacultyReports } from './pages/faculty/reports';
 import { FeesPayments } from './pages/student/fees-payments';
 import { PersonalTracker } from './pages/student/personal-tracker';
 import { Scholarships } from './pages/student/scholarships';
@@ -20,6 +24,9 @@ import { LoanCenter } from './pages/admin/loan-center';
 import { AdminFeeManagement } from './pages/admin/fee-management';
 import { RevenueAnalytics } from './pages/admin/revenue-analytics';
 import { ParentChildFees } from './pages/parent/child-fees';
+import { ParentAcademics } from './pages/parent/academics';
+import { ParentFinancials } from './pages/parent/financials';
+import { ParentMessaging } from './pages/parent/messaging';
 import { AIChatbot } from './components/chatbot';
 
 export const App: React.FC = () => {
@@ -58,6 +65,13 @@ export const App: React.FC = () => {
               <Route path="/progress" element={<DashboardsIndex />} />
               <Route path="/reports" element={<DashboardsIndex />} />
               <Route path="/audit-logs" element={<DashboardsIndex />} />
+              <Route path="/parent/academics" element={<ParentAcademics />} />
+              <Route path="/parent/financials" element={<ParentFinancials />} />
+              <Route path="/parent/messaging" element={<ParentMessaging />} />
+              <Route path="/faculty/marks" element={<FacultyMarks />} />
+              <Route path="/faculty/announcements" element={<FacultyAnnouncements />} />
+              <Route path="/faculty/messaging" element={<FacultyMessaging />} />
+              <Route path="/faculty/reports" element={<FacultyReports />} />
             </Route>
           </Route>
 
