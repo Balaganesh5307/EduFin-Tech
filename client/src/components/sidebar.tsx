@@ -15,7 +15,10 @@ import {
   FolderLock,
   User,
   GraduationCap,
-  Users
+  Users,
+  MessageSquare,
+  ClipboardList,
+  Megaphone
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -50,14 +53,19 @@ export const Sidebar: React.FC<SidebarProps> = ({ onNavigate, onProfileClick }) 
         return [
           ...common,
           { to: '/child-fees', label: 'Child Fee Status', icon: CreditCard },
-          { to: '/progress', label: 'Child Progress', icon: TrendingUp }
+          { to: '/parent/academics', label: 'Academic Progress', icon: TrendingUp },
+          { to: '/parent/financials', label: 'Financial Overview', icon: PiggyBank },
+          { to: '/parent/messaging', label: 'Faculty Messaging', icon: MessageSquare }
         ];
 
       case 'Faculty':
         return [
           ...common,
-          { to: '/faculty/attendance', label: 'Attendance Management', icon: CalendarCheck },
-          { to: '/reports', label: 'Academics Reports', icon: BookOpen }
+          { to: '/faculty/attendance', label: 'Attendance Ledger', icon: CalendarCheck },
+          { to: '/faculty/marks', label: 'Marks Register', icon: ClipboardList },
+          { to: '/faculty/announcements', label: 'Announcements', icon: Megaphone },
+          { to: '/faculty/messaging', label: 'Parent Messaging', icon: MessageSquare },
+          { to: '/faculty/reports', label: 'Academic Reports', icon: BookOpen }
         ];
 
       case 'Admin':
